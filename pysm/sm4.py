@@ -85,7 +85,7 @@ class CryptSM4(object):
             bb = get_uint32_be(b[0:4])
             c = bb ^ (rotl(bb, 2)) ^ (rotl(bb, 10)) ^ (rotl(bb, 18)) ^ (rotl(bb, 24))
             return c
-        return (x0 ^ sm4_l_t(x1 ^ x2 ^ x3 ^ rk))
+        return (x0 ^ _sm4_l_t(x1 ^ x2 ^ x3 ^ rk))
 
     def set_key(self, key, mode):
         MK = [0, 0, 0, 0]

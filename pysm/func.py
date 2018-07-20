@@ -6,31 +6,10 @@ get_uint32_be = lambda key_data:int((key_data[0] << 24) | (key_data[1] << 16) | 
 
 put_uint32_be = lambda n:[int((n>>24)&0xff), int((n>>16)&0xff), int((n>>8)&0xff), int((n)&0xff)]
 
+padding = lambda data, block=16: data + [(16 - len(data) % block)for _ in range(16 - len(data) % block)]
 
-def padding(text, block_byte=16, encoding='utf8'):
-    """
-    加密填充和解密去填充
-    """
+unpadding = lambda data: data[:-data[-1]]
 
-    # unicode
-    if isinstance(text, str):
-        text = text.encode(encoding=encoding)
+list_to_str = lambda data: ''.join([chr(i) for i in data])
 
-    if self.mode == SM4_ENCRYPT:
-        # 填充
-        p_num = block_byte - (len(text) % block_byte)
-        space = b''
-        pad_s = (chr(p_num).encode(encoding) * p_num)
-        res = space.join([text, pad_s])
-    else:
-        # 去填充
-        p_num = text[-1]
-        res = text[:-p_num]
-    return res
-
-def padding(data, block=16):
-    pad = 16 - len(data) % 16
-    for _ in range(16 - len(data) % 16):
-        data.append(pad)
-    return [for _ in range(16 - len(data) % 16)]
-unpadding = lambda data: data[:data[-1]]
+str_to_list = lambda data: [ord(i) for i in data]
