@@ -31,15 +31,15 @@ test_requirements = [
 
 setup(
 
-    name='genius',
-    description='genius中文分词 Chinese Segment On linear-chain CRF',
+    name='pysm',
+    description='Pure-Python SM2/SM4 implementation',
     version='3.1.7',
     author='duanhongyi',
     author_email='duanhyi@gmail.com',
     packages=find_packages(),
     include_package_data=True,
-    long_description=README + '\n\n' + CHANGES,
-    url='https://github.com/duanhongyi/genius',
+    long_description=README,
+    url='https://github.com/duanhongyi/pysm',
     install_requires=requires,
     tests_require=test_requirements,
     platforms='all platform',
