@@ -4,14 +4,14 @@ pysm4
 RSA算法的危机在于其存在亚指数算法，对ECC算法而言一般没有亚指数攻击算法
 SM2椭圆曲线公钥密码算法：我国自主知识产权的商用密码算法，是ECC（Elliptic Curve Cryptosystem）算法的一种，基于椭圆曲线离散对数问题，计算复杂度是指数级，求解难度较大，同等安全程度要求下，椭圆曲线密码较其他公钥算法所需密钥长度小很多。
 
-pysm是包含国密SM2算法的Python实现， 提供了 `encrypt`、 `decrypt`等函数用于加密解密， 用法如下：
+gmssl是包含国密SM2算法的Python实现， 提供了 `encrypt`、 `decrypt`等函数用于加密解密， 用法如下：
 
 #### 1. 初始化`CryptSM2`
 
 ```python
 import base64
 import binascii
-from pysm import sm2, func
+from gmssl import sm2, func
 private_key = '00B9AB0B828FF68872F21A837FC303668428DEA11DCD1B24429D0C99E24EED83D5'
 public_key = 'B9C9A6E04E9C91F7BA880429273747D7EF5DDEB0BB2FF6317EB00BEF331A83081A6994B8993F3F5D6EADDDB81872266C87C018FB4162F5AF347B483E24620207'
 sm2_crypt = sm2.CryptSM2(
@@ -40,14 +40,14 @@ assert sm2_crypt.verify(sign, data)
 国密SM4(无线局域网SMS4)算法， 一个分组算法， 分组长度为128bit， 密钥长度为128bit，
 算法具体内容参照[SM4算法](https://drive.google.com/file/d/0B0o25hRlUdXcbzdjT0hrYkkwUjg/view?usp=sharing)。
 
-pysm是包含国密SM4算法的Python实现， 提供了 `encrypt_ecb`、 `decrypt_ecb`、 `encrypt_cbc`、
+gmssl是包含国密SM4算法的Python实现， 提供了 `encrypt_ecb`、 `decrypt_ecb`、 `encrypt_cbc`、
 `decrypt_cbc`等函数用于加密解密， 用法如下：
 
 #### 1. 初始化`CryptSM4`
 
 ```python
-from pysm.sm4 import CryptSM4, SM4_ENCRYPT, SM4_DECRYPT
-from pysm.func import padding, unpadding, str_to_list, list_to_str
+from gmssl.sm4 import CryptSM4, SM4_ENCRYPT, SM4_DECRYPT
+from gmssl.func import padding, unpadding, str_to_list, list_to_str
 
 key = '3l5butlj26hvv313'
 value = '111'

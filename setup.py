@@ -31,15 +31,15 @@ test_requirements = [
 
 setup(
 
-    name='pysm',
-    description='Pure-Python SM2/SM4 implementation',
+    name='gmssl',
+    description='Pure-Python SM2/SM3/SM4 implementation',
     version='3.1.7',
     author='duanhongyi',
     author_email='duanhyi@gmail.com',
     packages=find_packages(),
     include_package_data=True,
     long_description=README,
-    url='https://github.com/duanhongyi/pysm',
+    url='https://github.com/duanhongyi/gmssl',
     install_requires=requires,
     tests_require=test_requirements,
     platforms='all platform',
