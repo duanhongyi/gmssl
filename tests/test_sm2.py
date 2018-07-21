@@ -11,9 +11,8 @@ if __name__ == '__main__':
         public_key=public_key, private_key=private_key)
     data = "111"
     enc_data = sm2_crypt.encrypt(data)
-    print("enc_data:%s" % enc_data)
-    print("enc_data_base64:%s" % base64.b64encode(bytes.fromhex(enc_data)))
-    enc_data = '277FBCC5FC5271546ED1CB6BE38CE4FF071FCD3BDA71C31294819E74C2DCF1B5DDDB5BEC608B383967A7FC312A1DF17F3ABE52D5878B769148D7503AD315425C076FE26841DBC8F2C83AA1526C73527F93B4960FBE5D494ED608B301973543E087DAEF'
+    #print("enc_data:%s" % enc_data)
+    #print("enc_data_base64:%s" % base64.b64encode(bytes.fromhex(enc_data)))
     dec_data = sm2_crypt.decrypt(enc_data)
     print("dec_data:%s" % bytes.fromhex(dec_data))
 

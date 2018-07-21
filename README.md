@@ -25,7 +25,7 @@ sm2_crypt = sm2.CryptSM2(
 ```python
 data = "111"
 enc_data = sm2_crypt.encrypt(data)
-dec_data = sm2_crypt.decrypt(enc_data)
+dec_data =bytes.fromhex(sm2_crypt.decrypt(enc_data)).decode('utf-8')
 assert dec_data == data
 ```
 
