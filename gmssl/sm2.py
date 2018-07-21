@@ -1,5 +1,5 @@
 from random import choice
-from pysm import sm3, func
+from . import sm3, func
 # 选择素域，设置椭圆曲线参数
 
 default_ecc_table = {
