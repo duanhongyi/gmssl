@@ -13,8 +13,8 @@ padding = lambda data, block=16: data + [(16 - len(data) % block)for _ in range(
 
 unpadding = lambda data: data[:-data[-1]]
 
-list_to_str = lambda data: ''.join([chr(i) for i in data])
+list_to_bytes = lambda data: b''.join([bytes((i,)) for i in data])
 
-str_to_list = lambda data: [ord(i) for i in data]
+bytes_to_list = lambda data: [i for i in data]
 
 random_hex = lambda x: ''.join([choice('0123456789abcdef') for _ in range(x)])

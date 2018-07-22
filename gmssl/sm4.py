@@ -1,6 +1,7 @@
 #-*-coding:utf-8-*-
 import copy
-from .func import xor, rotl, get_uint32_be, put_uint32_be
+from .func import xor, rotl, get_uint32_be, put_uint32_be, \
+        bytes_to_list, list_to_bytes, padding, unpadding
 
 #Expanded SM4 box table
 SM4_BOXES_TABLE = [
@@ -88,6 +89,7 @@ class CryptSM4(object):
         return (x0 ^ _sm4_l_t(x1 ^ x2 ^ x3 ^ rk))
 
     def set_key(self, key, mode):
+        key = bytes_to_list(key)
         MK = [0, 0, 0, 0]
         k = [0]*36
         MK[0] = get_uint32_be(key[0:4])
@@ -124,6 +126,9 @@ class CryptSM4(object):
 
     def crypt_ecb(self, input_data):
         # SM4-ECB block encryption/decryption
+        input_data = bytes_to_list(input_data)
+        if self.mode == SM4_ENCRYPT:
+            input_data = padding(input_data)
         length = len(input_data)
         i = 0
         output_data = []
@@ -131,26 +136,32 @@ class CryptSM4(object):
             output_data += self.one_round(self.sk, input_data[i:i+16])
             i += 16
             length -= 16
-        return output_data
+        if self.mode == SM4_DECRYPT:
+            return list_to_bytes(unpadding(output_data))
+        return list_to_bytes(output_data)
 
     def crypt_cbc(self, iv, input_data):
         #SM4-CBC buffer encryption/decryption
-        length = len(input_data)
         i = 0
         output_data = []
         tmp_input = [0]*16
+        iv = bytes_to_list(iv)
         if self.mode == SM4_ENCRYPT:
+            input_data = padding(bytes_to_list(input_data))
+            length = len(input_data)
             while length > 0:
                 tmp_input[0:16] = xor(input_data[i:i+16], iv[0:16])
                 output_data += self.one_round(self.sk, tmp_input[0:16])
                 iv = copy.deepcopy(output_data[i:i+16])
                 i += 16
                 length -= 16
+            return list_to_bytes(output_data)
         else:
+            length = len(input_data)
             while length > 0:
                 output_data += self.one_round(self.sk, input_data[i:i+16])
                 output_data[i:i+16] = xor(output_data[i:i+16], iv[0:16])
                 iv = copy.deepcopy(input_data[i:i + 16])
                 i += 16
                 length -= 16
-        return output_data
+            return list_to_bytes(unpadding(output_data))

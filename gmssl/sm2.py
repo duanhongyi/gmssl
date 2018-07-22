@@ -1,3 +1,4 @@
+import binascii
 from random import choice
 from . import sm3, func
 # 选择素域，设置椭圆曲线参数
@@ -144,7 +145,7 @@ class CryptSM2(object):
         # 验签函数，sign签名r||s，E消息hash，public_key公钥
         r = int(Sign[0:self.para_len], 16)
         s = int(Sign[self.para_len:2*self.para_len], 16)
-        e = int(data.encode('utf-8').hex(), 16)
+        e = int(data.hex(), 16)
         t = (r + s) % int(self.ecc_table['n'], base=16)
         if t == 0:
             return 0
@@ -165,7 +166,7 @@ class CryptSM2(object):
         return (r == ((e + x) % int(self.ecc_table['n'], base=16)))
 
     def sign(self, data, K):  # 签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
-        E = data.encode('utf-8').hex() # 消息转化为16进制字符串
+        E = data.hex() # 消息转化为16进制字符串
         e = int(E, 16)
 
         d = int(self.private_key, 16)
@@ -184,9 +185,9 @@ class CryptSM2(object):
         else:
             return '%064x%064x' % (R,S)
 
-    def encrypt(self, data):# 加密函数，M消息，public_key公钥
-
-        msg = data.encode('utf-8').hex() # 消息转化为16进制字符串
+    def encrypt(self, data):
+        # 加密函数，data消息(bytes)
+        msg = data.hex() # 消息转化为16进制字符串
         k = func.random_hex(self.para_len)
         C1 = self._kg(int(k,16),self.ecc_table['g'])
         xy = self._kg(int(k,16),self.public_key)
@@ -202,10 +203,11 @@ class CryptSM2(object):
             C3 = sm3.sm3_hash([
                 i for i in bytes.fromhex('%s%s%s'% (x2,msg,y2))
             ])
-            return '%s%s%s' % (C1,C3,C2)
+            return bytes.fromhex('%s%s%s' % (C1,C3,C2))
 
     def decrypt(self, data):
-        # 解密函数，data密文（16进制字符串），private_key私钥
+        # 解密函数，data密文（bytes）
+        data = data.hex()
         len_2 = 2 * self.para_len
         len_3 = len_2 + 64
         C1 = data[0:len_2]
@@ -225,4 +227,4 @@ class CryptSM2(object):
             u = sm3.sm3_hash([
                 i for i in bytes.fromhex('%s%s%s'% (x2,M,y2))
             ])
-            return M
+            return bytes.fromhex(M)

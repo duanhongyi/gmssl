@@ -33,7 +33,7 @@ setup(
 
     name='gmssl',
     description='Pure-Python SM2/SM3/SM4 implementation',
-    version='3.1.9',
+    version='3.2.1',
     author='duanhongyi',
     author_email='duanhyi@gmail.com',
     packages=find_packages(),

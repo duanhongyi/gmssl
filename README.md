@@ -23,15 +23,15 @@ sm2_crypt = sm2.CryptSM2(
 #### 2. `encrypt`和`decrypt`
 
 ```python
-data = "111"
+data = b"111"
 enc_data = sm2_crypt.encrypt(data)
-dec_data =bytes.fromhex(sm2_crypt.decrypt(enc_data)).decode('utf-8')
+dec_data =sm2_crypt.decrypt(enc_data)
 assert dec_data == data
 ```
 
 #### 3. `sign`和`verify`
 ```python
-data = "111"
+data = b"111"
 random_hex_str = func.random_hex(sm2_crypt.para_len)
 sign = sm2_crypt.sign(data, random_hex_str)
 assert sm2_crypt.verify(sign, data)
@@ -49,11 +49,10 @@ gmssl是包含国密SM4算法的Python实现， 提供了 `encrypt_ecb`、 `decr
 
 ```python
 from gmssl.sm4 import CryptSM4, SM4_ENCRYPT, SM4_DECRYPT
-from gmssl.func import padding, unpadding, str_to_list, list_to_str
 
-key = '3l5butlj26hvv313'
-value = '111'
-iv = [0] * 16
+key = b'3l5butlj26hvv313'
+value = b'111'
+iv = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
 crypt_sm4 = CryptSM4()
 ```
 
@@ -61,20 +60,22 @@ crypt_sm4 = CryptSM4()
 
 ```python
 
-crypt_sm4.set_key(str_to_list(key), SM4_ENCRYPT)
-encrypt_value = crypt_sm4.crypt_ecb(padding(str_to_list(value)))
-crypt_sm4.set_key(str_to_list(key), SM4_DECRYPT)
-decrypt_value = unpadding(crypt_sm4.crypt_ecb(encrypt_value))
-assert value == list_to_str(decrypt_value)
+crypt_sm4.set_key(key, SM4_ENCRYPT)
+encrypt_value = crypt_sm4.crypt_ecb(value)
+crypt_sm4.set_key(key, SM4_DECRYPT)
+decrypt_value = crypt_sm4.crypt_ecb(encrypt_value)
+assert value == decrypt_value
+
 ```
 
 #### 3. `encrypt_cbc`和`decrypt_cbc`
 
 ```python
 
-crypt_sm4.set_key(str_to_list(key), SM4_ENCRYPT)
-encrypt_value = crypt_sm4.crypt_cbc(iv , padding(str_to_list(value)))
-crypt_sm4.set_key(str_to_list(key), SM4_DECRYPT)
-decrypt_value = unpadding(crypt_sm4.crypt_cbc(iv , encrypt_value))
-assert value == list_to_str(decrypt_value)
+crypt_sm4.set_key(key, SM4_ENCRYPT)
+encrypt_value = crypt_sm4.crypt_cbc(iv , value)
+crypt_sm4.set_key(key, SM4_DECRYPT)
+decrypt_value = crypt_sm4.crypt_cbc(iv , encrypt_value)
+assert value == decrypt_value
+
 ```
