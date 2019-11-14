@@ -165,7 +165,13 @@ class CryptSM2(object):
         x = int(P1[0:self.para_len], 16)
         return (r == ((e + x) % int(self.ecc_table['n'], base=16)))
 
-    def sign(self, data, K):  # 签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
+    def sign(self, data):
+        e = self.get_e(data.hex())
+        print(e)
+        k = func.random_hex(self.para_len)
+        return self.sign_with_e(bytes.fromhex(e), k)
+
+    def sign_with_e(self, data, K):  # 签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
         E = data.hex() # 消息转化为16进制字符串
         e = int(E, 16)
 
@@ -184,6 +190,18 @@ class CryptSM2(object):
             return None
         else:
             return '%064x%064x' % (R,S)
+
+    def get_e(self, msg):
+        entla = "0080"
+        ida = "31323334353637383132333435363738"
+        a = default_ecc_table["a"]
+        b = default_ecc_table["b"]
+        gx = default_ecc_table["g"][:32]
+        gy = default_ecc_table["g"][32:]
+        xa = self.public_key[:32]
+        ya = self.public_key[32:]
+        za = sm3.sm3_hash(list(bytes.fromhex(entla + ida + a + b + gx + gy + xa + ya)))
+        return sm3.sm3_hash(list(bytes.fromhex(za + msg)))
 
     def encrypt(self, data):
         # 加密函数，data消息(bytes)
