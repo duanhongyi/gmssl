@@ -1,6 +1,7 @@
 import binascii
 from math import ceil
 from .func import rotl, bytes_to_list
+import struct
 
 IV = [
     1937774191, 1226093241, 388252375, 3666478592,
@@ -235,5 +236,16 @@ def sm3_kdf(z, klen):  # z为16进制表示的比特串（str），klen为密钥
     for i in range(rcnt):
         msg = zin + [i for i in binascii.a2b_hex(('%08x' % ct).encode('utf8'))]
         ha = ha + sm3_hash(msg)
+        ct += 1
+    return ha[0: klen * 2]
+
+def sm3_kdf_ex(z, klen):  # z为16进制表示的比特串（str），klen为密钥长度（单位byte）
+    klen = int(klen)
+    ct = 0x00000001
+    rcnt = ceil(klen / 32)
+    ha = ""
+    for i in range(rcnt):
+        msg = z + struct.pack("!I", ct)
+        ha = ha + sm3_hash(list(msg))
         ct += 1
     return ha[0: klen * 2]
