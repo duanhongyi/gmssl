@@ -4,3 +4,5 @@
 # @Author: yubo
 # @Date  : 2019/12/16
 # @Desc  :
+from .sm3 import sm3_hash, SM3
+from .libsm3 import lib_sm3
