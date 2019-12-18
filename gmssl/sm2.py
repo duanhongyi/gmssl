@@ -1,6 +1,7 @@
 import binascii
 from random import choice
 from . import sm3, func
+
 # 选择素域，设置椭圆曲线参数
 
 default_ecc_table = {
@@ -141,7 +142,7 @@ class CryptSM2(object):
         else:
             return None
 
-    def verify(self, Sign, data):
+    def verify_with_e(self, Sign, data):
         # 验签函数，sign签名r||s，E消息hash，public_key公钥
         r = int(Sign[0:self.para_len], 16)
         s = int(Sign[self.para_len:2*self.para_len], 16)
@@ -165,7 +166,17 @@ class CryptSM2(object):
         x = int(P1[0:self.para_len], 16)
         return (r == ((e + x) % int(self.ecc_table['n'], base=16)))
 
-    def sign(self, data, K):  # 签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
+    def verify(self, sign, data):
+        e = self.get_e(data.hex())
+        return self.verify_with_e(sign, bytes.fromhex(e))
+
+    def sign(self, data):
+        e = self.get_e(data.hex())
+        #print(e)
+        k = func.random_hex(self.para_len)
+        return self.sign_with_e(bytes.fromhex(e), k)
+
+    def sign_with_e(self, data, K):  # 签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
         E = data.hex() # 消息转化为16进制字符串
         e = int(E, 16)
 
@@ -184,6 +195,18 @@ class CryptSM2(object):
             return None
         else:
             return '%064x%064x' % (R,S)
+
+    def get_e(self, msg):
+        entla = "0080"
+        ida = "31323334353637383132333435363738"
+        a = default_ecc_table["a"]
+        b = default_ecc_table["b"]
+        gx = default_ecc_table["g"][:64]
+        gy = default_ecc_table["g"][64:]
+        xa = self.public_key[:32]
+        ya = self.public_key[32:]
+        za = sm3.sm3_hash(list(bytes.fromhex(entla + ida + a + b + gx + gy + xa + ya)))
+        return sm3.sm3_hash(list(bytes.fromhex(za + msg)))
 
     def encrypt(self, data):
         # 加密函数，data消息(bytes)
@@ -228,3 +251,6 @@ class CryptSM2(object):
                 i for i in bytes.fromhex('%s%s%s'% (x2,M,y2))
             ])
             return bytes.fromhex(M)
+
+from .sm2_helper import sm2_key_pair_gen
+
