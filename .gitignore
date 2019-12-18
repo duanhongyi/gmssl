@@ -11,3 +11,4 @@ MANIFEST
 *.egg-info/
 .DS_Store
 .idea/
+venv/
