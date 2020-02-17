@@ -42,11 +42,16 @@ sm3_update = None
 sm3_finish = None
 sm3 = None
 
+if platform.system() == "Windows":
+    lib_file = "libsm3.dll"
+else:
+    lib_file = "libsm3.so"
+
 try:
-    if platform.system() == "Windows":
-        library_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "libsm3.dll")
-    else:
-        library_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "libsm3.so")
+    library_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), lib_file)
+    if not os.path.exists(library_path):
+        library_path = os.path.join(os.getcwd(), lib_file)
+
     lib_sm3 = ctypes.CDLL(library_path)
 except Exception as e:
     lib_sm3 = None
