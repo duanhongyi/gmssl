@@ -1,3 +1,4 @@
+import sys
 from random import choice
 
 
@@ -13,8 +14,13 @@ padding = lambda data, block=16: data + [(16 - len(data) % block)for _ in range(
 
 unpadding = lambda data: data[:-data[-1]]
 
-list_to_bytes = lambda data: b''.join([bytes((i,)) for i in data])
+if sys.version_info[0] == 2:
+    list_to_bytes = lambda data:''.join([chr(x) for x in data])
+    bytes_to_list = lambda data: [ord(x) for x in data]
+else:
+    list_to_bytes = lambda data: b''.join([bytes((i,)) for i in data])
+    bytes_to_list = lambda data: [i for i in data]
 
-bytes_to_list = lambda data: [i for i in data]
+
 
 random_hex = lambda x: ''.join([choice('0123456789abcdef') for _ in range(x)])

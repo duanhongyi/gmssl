@@ -142,12 +142,13 @@ class CryptSM4(object):
 
     def crypt_cbc(self, iv, input_data):
         #SM4-CBC buffer encryption/decryption
+        input_data = bytes_to_list(input_data)
         i = 0
         output_data = []
         tmp_input = [0]*16
         iv = bytes_to_list(iv)
         if self.mode == SM4_ENCRYPT:
-            input_data = padding(bytes_to_list(input_data))
+            input_data = padding(input_data)
             length = len(input_data)
             while length > 0:
                 tmp_input[0:16] = xor(input_data[i:i+16], iv[0:16])
