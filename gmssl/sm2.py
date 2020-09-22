@@ -228,3 +228,30 @@ class CryptSM2(object):
                 i for i in bytes.fromhex('%s%s%s'% (x2,M,y2))
             ])
             return bytes.fromhex(M)
+
+
+     def _sm3_z(self, data):
+         """
+         SM3WITHSM2 签名规则:  SM2.sign(SM3(Z+MSG)，PrivateKey)
+         其中: z = Hash256(Len(ID) + ID + a + b + xG + yG + xA + yA)
+         """
+         # sm3withsm2 的 z 值
+         z = '0080'+'31323334353637383132333435363738' + \
+             self.ecc_table['a'] + self.ecc_table['b'] + self.ecc_table['g'] + \
+             self.public_key
+         z = binascii.a2b_hex(z)
+         Za = sm3.sm3_hash(func.bytes_to_list(z))
+         M_ = (Za + data.hex()).encode('utf-8')
+         e = sm3.sm3_hash(func.bytes_to_list(binascii.a2b_hex(M_)))
+         return e
+
+     def sign_with_sm3(self, data, random_hex_str=None):
+         sign_data = binascii.a2b_hex(self._sm3_z(data).encode('utf-8'))
+         if random_hex_str is None:
+             random_hex_str = func.random_hex(self.para_len)
+         sign = self.sign(sign_data, random_hex_str) #  16进制
+         return sign
+
+     def verify_with_sm3(self, sign, data):
+         sign_data = binascii.a2b_hex(self._sm3_z(data).encode('utf-8'))
+         return self.verify(sign, sign_data)
