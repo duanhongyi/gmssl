@@ -45,6 +45,14 @@ sign = sm2_crypt.sign(data, random_hex_str) #  16进制
 assert sm2_crypt.verify(sign, data) #  16进制
 ```
 
+#### 4. SM2withSM3签名的`sign`和`verify`
+
+```python
+data = b"111" # bytes类型
+sign = sm2_crypt.sign_SM2withSM3(data) #  16进制
+assert sm2_crypt.verify_SM2withSM3(sign, data) #  16进制
+```
+
 ### SM4算法
 
 国密SM4(无线局域网SMS4)算法， 一个分组算法， 分组长度为128bit， 密钥长度为128bit，
