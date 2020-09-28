@@ -14,13 +14,18 @@ default_ecc_table = {
 
 class CryptSM2(object):
 
-    def __init__(self, private_key, public_key, ecc_table=default_ecc_table):
+    def __init__(self, private_key, public_key, ecc_table=default_ecc_table, mode=1):
+        """
+        mode: 0-C1C2C3, 1-C1C3C2 (default is 1)
+        """
         self.private_key = private_key
         self.public_key = public_key
         self.para_len = len(ecc_table['n'])
         self.ecc_a3 = (
             int(ecc_table['a'], base=16) + 3) % int(ecc_table['p'], base=16)
         self.ecc_table = ecc_table
+        assert mode in (0, 1), 'mode must be one of (0, 1)'
+        self.mode = mode
 
     def _kg(self, k, Point):  # kP运算
         Point = '%s%s' % (Point, '1')
@@ -203,7 +208,10 @@ class CryptSM2(object):
             C3 = sm3.sm3_hash([
                 i for i in bytes.fromhex('%s%s%s'% (x2,msg,y2))
             ])
-            return bytes.fromhex('%s%s%s' % (C1,C3,C2))
+            if self.mode:
+                return bytes.fromhex('%s%s%s' % (C1,C3,C2))
+            else:
+                return bytes.fromhex('%s%s%s' % (C1,C2,C3))
 
     def decrypt(self, data):
         # 解密函数，data密文（bytes）
@@ -211,8 +219,14 @@ class CryptSM2(object):
         len_2 = 2 * self.para_len
         len_3 = len_2 + 64
         C1 = data[0:len_2]
-        C3 = data[len_2:len_3]
-        C2 = data[len_3:]
+        
+        if self.mode:
+            C3 = data[len_2:len_3]
+            C2 = data[len_3:]
+        else:
+            C2 = data[len_2:-64]
+            C3 = data[-64:]
+            
         xy = self._kg(int(self.private_key,16),C1)
         # print('xy = %s' % xy)
         x2 = xy[0:self.para_len]
