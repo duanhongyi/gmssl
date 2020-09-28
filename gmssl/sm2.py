@@ -14,7 +14,7 @@ default_ecc_table = {
 
 class CryptSM2(object):
 
-    def __init__(self, private_key, public_key, ecc_table=default_ecc_table, mode=1):
+    def __init__(self, private_key, public_key, ecc_table=default_ecc_table, mode=0):
         """
         mode: 0-C1C2C3, 1-C1C3C2 (default is 1)
         """
