@@ -173,7 +173,7 @@ class CryptSM2(object):
         x = int(P1[0:self.para_len], 16)
         return (r == ((e + x) % int(self.ecc_table['n'], base=16)))
 
-    def sign(self, data, K):  # 签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
+    def sign(self, data, K, asn1 = False):  # 签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
         E = data.hex()  # 消息转化为16进制字符串
         e = int(E, 16)
 
