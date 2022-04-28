@@ -1,6 +1,7 @@
 import binascii
 from random import choice
 from . import sm3, func
+from Cryptodome.Util.asn1 import DerSequence, DerInteger
 # 选择素域，设置椭圆曲线参数
 
 default_ecc_table = {
@@ -173,7 +174,7 @@ class CryptSM2(object):
         x = int(P1[0:self.para_len], 16)
         return (r == ((e + x) % int(self.ecc_table['n'], base=16)))
 
-    def sign(self, data, K):  # 签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
+    def sign(self, data, K, asn1):  # 签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
         E = data.hex()  # 消息转化为16进制字符串
         e = int(E, 16)
 
@@ -191,6 +192,8 @@ class CryptSM2(object):
         S = (d_1*(k + R) - R) % int(self.ecc_table['n'], base=16)
         if S == 0:
             return None
+        elif asn1:
+            return DerSequence([DerInteger(R), DerInteger(S)]).encode().hex()
         else:
             return '%064x%064x' % (R, S)
 
@@ -262,11 +265,11 @@ class CryptSM2(object):
         e = sm3.sm3_hash(func.bytes_to_list(binascii.a2b_hex(M_)))
         return e
 
-    def sign_with_sm3(self, data, random_hex_str=None):
+    def sign_with_sm3(self, data, random_hex_str=None, asn1=False):
         sign_data = binascii.a2b_hex(self._sm3_z(data).encode('utf-8'))
         if random_hex_str is None:
             random_hex_str = func.random_hex(self.para_len)
-        sign = self.sign(sign_data, random_hex_str)  # 16进制
+        sign = self.sign(sign_data, random_hex_str, asn1=asn1)  # 16进制
         return sign
 
     def verify_with_sm3(self, sign, data):
