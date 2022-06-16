@@ -1,6 +1,8 @@
 import binascii
 from random import choice
 from . import sm3, func
+from Cryptodome.Util.asn1 import DerSequence, DerInteger
+from binascii import unhexlify
 # 选择素域，设置椭圆曲线参数
 
 default_ecc_table = {
@@ -15,7 +17,7 @@ default_ecc_table = {
 
 class CryptSM2(object):
 
-    def __init__(self, private_key, public_key, ecc_table=default_ecc_table, mode=0):
+    def __init__(self, private_key, public_key, ecc_table=default_ecc_table, mode=0, asn1=False):
         """
         mode: 0-C1C2C3, 1-C1C3C2 (default is 1)
         """
@@ -27,6 +29,7 @@ class CryptSM2(object):
         self.ecc_table = ecc_table
         assert mode in (0, 1), 'mode must be one of (0, 1)'
         self.mode = mode
+        self.asn1 = asn1
 
     def _kg(self, k, Point):  # kP运算
         Point = '%s%s' % (Point, '1')
@@ -151,8 +154,15 @@ class CryptSM2(object):
 
     def verify(self, Sign, data):
         # 验签函数，sign签名r||s，E消息hash，public_key公钥
-        r = int(Sign[0:self.para_len], 16)
-        s = int(Sign[self.para_len:2*self.para_len], 16)
+        if self.asn1:
+            unhex_sign = unhexlify(Sign.encode())
+            seq_der = DerSequence()
+            origin_sign = seq_der.decode(unhex_sign)
+            r = origin_sign[0]
+            s = origin_sign[1]
+        else:
+            r = int(Sign[0:self.para_len], 16)
+            s = int(Sign[self.para_len:2*self.para_len], 16)
         e = int(data.hex(), 16)
         t = (r + s) % int(self.ecc_table['n'], base=16)
         if t == 0:
@@ -171,9 +181,16 @@ class CryptSM2(object):
             P1 = self._convert_jacb_to_nor(P1)
 
         x = int(P1[0:self.para_len], 16)
-        return (r == ((e + x) % int(self.ecc_table['n'], base=16)))
+        return r == ((e + x) % int(self.ecc_table['n'], base=16))
 
-    def sign(self, data, K, asn1 = False):  # 签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
+    def sign(self, data, K):
+        """
+        签名函数, data消息的hash，private_key私钥，K随机数，均为16进制字符串
+        :param self: 
+        :param data: data消息的hash
+        :param K: K随机数
+        :return: 
+        """
         E = data.hex()  # 消息转化为16进制字符串
         e = int(E, 16)
 
@@ -191,6 +208,8 @@ class CryptSM2(object):
         S = (d_1*(k + R) - R) % int(self.ecc_table['n'], base=16)
         if S == 0:
             return None
+        elif self.asn1:
+            return DerSequence([DerInteger(R), DerInteger(S)]).encode().hex()
         else:
             return '%064x%064x' % (R, S)
 
