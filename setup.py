@@ -21,7 +21,7 @@ def read_text(file_path):
 README = read_text(os.path.join(here, 'README.md'))
 
 requires = [
-
+    "pycryptodomex"
 ]
 
 test_requirements = [
@@ -33,7 +33,7 @@ setup(
 
     name='gmssl',
     description='Pure-Python SM2/SM3/SM4 implementation',
-    version='3.2.1',
+    version='3.2.2',
     author='duanhongyi',
     author_email='duanhyi@gmail.com',
     packages=find_packages(),
