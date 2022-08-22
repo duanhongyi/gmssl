@@ -9,9 +9,16 @@ get_uint32_be = lambda key_data:((key_data[0] << 24) | (key_data[1] << 16) | (ke
 
 put_uint32_be = lambda n:[((n>>24)&0xff), ((n>>16)&0xff), ((n>>8)&0xff), ((n)&0xff)]
 
-padding = lambda data, block=16: data + [(16 - len(data) % block)for _ in range(16 - len(data) % block)]
+pkcs7_padding = lambda data, block=16: data + [(16 - len(data) % block)for _ in range(16 - len(data) % block)]
 
-unpadding = lambda data: data[:-data[-1]]
+zero_padding = lambda data, block=16: data + [0 for _ in range(16 - len(data) % block)]
+
+pkcs7_unpadding = lambda data: data[:-data[-1]]
+
+def zero_unpadding(data):
+    while not data[-1]:
+        data = data[:-1]
+    return data
 
 list_to_bytes = lambda data: b''.join([bytes((i,)) for i in data])
 
