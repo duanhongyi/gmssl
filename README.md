@@ -87,6 +87,7 @@ decrypt_value = crypt_sm4.crypt_ecb(encrypt_value) #  bytes类型
 assert value == decrypt_value
 
 ```
+> 原项目中SM4算法使用的是PKCS7填充算法，因开发需求，添加填充0算法
 
 #### 3. `encrypt_cbc`和`decrypt_cbc`
 
