@@ -15,10 +15,7 @@ zero_padding = lambda data, block=16: data + [0 for _ in range(16 - len(data) % 
 
 pkcs7_unpadding = lambda data: data[:-data[-1]]
 
-def zero_unpadding(data):
-    while not data[-1]:
-        data = data[:-1]
-    return data
+zero_unpadding = lambda data,i =1:data[:-i] if data[-i] == 0 else i+1
 
 list_to_bytes = lambda data: b''.join([bytes((i,)) for i in data])
 
