@@ -1,7 +1,8 @@
 # -*-coding:utf-8-*-
 import copy
 from .func import xor, rotl, get_uint32_be, put_uint32_be, \
-    bytes_to_list, list_to_bytes, pkcs7_padding, pkcs7_unpadding, zero_padding, zero_unpadding
+    bytes_to_list, list_to_bytes, pkcs7_padding, pkcs7_unpadding, zero_padding, zero_unpadding, \
+iso9797m2_padding, iso9797m2_unpadding, pboc_padding, pboc_unpadding
 
 # Expanded SM4 box table
 SM4_BOXES_TABLE = [
@@ -43,8 +44,12 @@ SM4_CK = [
 SM4_ENCRYPT = 0
 SM4_DECRYPT = 1
 
-PKCS7 = 0
+NoPadding = 0
 ZERO = 1
+ISO9797M2 = 2
+PKCS7 = 3
+PBOC = 4
+
 
 
 class CryptSM4(object):
@@ -148,12 +153,17 @@ class CryptSM4(object):
 
     def crypt_ecb(self, input_data):
         # SM4-ECB block encryption/decryption
-        input_data = bytes_to_list(input_data)
         if self.mode == SM4_ENCRYPT:
+            if self.padding_mode == NoPadding:
+                pass
+            if self.padding_mode == ZERO:
+                input_data = zero_padding(bytes_to_list(input_data))
+            if self.padding_mode == ISO9797M2:
+                 input_data = iso9797m2_padding(input_data)
             if self.padding_mode == PKCS7:
-                input_data = pkcs7_padding(input_data)
-            elif self.padding_mode == ZERO:
-                input_data = zero_padding(input_data)
+                input_data = pkcs7_padding(bytes_to_list(input_data))
+            if self.padding_mode == PBOC:
+                input_data = pboc_padding(input_data)
 
         length = len(input_data)
         i = 0
@@ -163,10 +173,16 @@ class CryptSM4(object):
             i += 16
             length -= 16
         if self.mode == SM4_DECRYPT:
+            if self.padding_mode == NoPadding:
+                pass
+            if self.padding_mode == ZERO:
+                return list_to_bytes(zero_unpadding(output_data))
+            if self.padding_mode == ISO9797M2:
+                return list_to_bytes(iso9797m2_unpadding(output_data))
             if self.padding_mode == PKCS7:
                 return list_to_bytes(pkcs7_unpadding(output_data))
-            elif self.padding_mode == ZERO:
-                return list_to_bytes(zero_unpadding(output_data))
+            if self.padding_mode == PBOC:
+                return list_to_bytes(pboc_unpadding(output_data))
         return list_to_bytes(output_data)
 
     def crypt_cbc(self, iv, input_data):
@@ -176,7 +192,17 @@ class CryptSM4(object):
         tmp_input = [0] * 16
         iv = bytes_to_list(iv)
         if self.mode == SM4_ENCRYPT:
-            input_data = pkcs7_padding(bytes_to_list(input_data))
+            if self.padding_mode == NoPadding:
+                pass
+            if self.padding_mode == ZERO:
+                input_data = zero_padding(bytes_to_list(input_data))
+            if self.padding_mode == ISO9797M2:
+                 input_data = iso9797m2_padding(input_data)
+            if self.padding_mode == PKCS7:
+                input_data = pkcs7_padding(bytes_to_list(input_data))
+            if self.padding_mode == PBOC:
+                input_data = pboc_padding(input_data)
+            # input_data = pkcs7_padding(bytes_to_list(input_data))
             length = len(input_data)
             while length > 0:
                 tmp_input[0:16] = xor(input_data[i:i + 16], iv[0:16])
@@ -193,4 +219,14 @@ class CryptSM4(object):
                 iv = copy.deepcopy(input_data[i:i + 16])
                 i += 16
                 length -= 16
-            return list_to_bytes(pkcs7_unpadding(output_data))
+            if self.padding_mode == NoPadding:
+                pass
+            if self.padding_mode == ZERO:
+                return list_to_bytes(zero_unpadding(output_data))
+            if self.padding_mode == ISO9797M2:
+                return list_to_bytes(iso9797m2_unpadding(output_data))
+            if self.padding_mode == PKCS7:
+                return list_to_bytes(pkcs7_unpadding(output_data))
+            if self.padding_mode == PBOC:
+                return list_to_bytes(pboc_unpadding(output_data))
+            return list_to_bytes(output_data)
