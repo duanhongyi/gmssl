@@ -22,7 +22,7 @@ class CryptSM2(object):
         mode: 0-C1C2C3, 1-C1C3C2 (default is 1)
         """
         self.private_key = private_key
-        self.public_key = public_key[2:] if public_key.startswith("04") else public_key
+        self.public_key = public_key[2:] if (public_key.startswith("04") and len(public_key)==130) else public_key
         self.para_len = len(ecc_table['n'])
         self.ecc_a3 = (
             int(ecc_table['a'], base=16) + 3) % int(ecc_table['p'], base=16)
