@@ -24,6 +24,33 @@ bytes_to_list = lambda data: [i for i in data]
 random_hex = lambda x: ''.join([choice('0123456789abcdef') for _ in range(x)])
 
 
+def exp_mod(x: int, e: int, p: int) -> int:
+    """
+    x ** e (mod p)
+    :param x:
+    :param e:
+    :param p:
+    :return:
+    """
+    r = 1
+    while e > 0:
+        if e & 1 == 1:
+            r = (r * x) % p
+        x = (x * x) % p
+        e >>= 1
+    return r
+
+
+def inv_mod(x: int, p: int) -> int:
+    """
+    x ^ -1 (mod p)
+    :param x:
+    :param p:
+    :return:
+    """
+    return exp_mod(x, p - 2, p)
+
+
 def pboc_padding(data, block=16):
     """
     参考PBOC2018规范第7部分11.1.1章节。如果数据长度不是分组长度的整数倍，则填充1字节0x80，再填充0x00到分组长度的整数倍。如果数据长度是分组长度的整数倍则不填充。
