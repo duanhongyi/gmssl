@@ -24,6 +24,11 @@ def test_sm2():
     verify = sm2_crypt.verify(sign, data)
     print('verify:%s' % verify)
     assert verify
+    
+    print("-----------------test recovering public key from signature and hashed data---------------")
+    public_keys_recovered = sm2_crypt.recover_public_keys(sign, data)
+    print(public_keys_recovered)
+    assert public_key.lower() in public_keys_recovered
 
 
 def test_sm3():

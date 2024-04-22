@@ -291,3 +291,62 @@ class CryptSM2(object):
     def verify_with_sm3(self, sign, data):
         sign_data = binascii.a2b_hex(self._sm3_z(data).encode('utf-8'))
         return self.verify(sign, sign_data)
+
+    def recover_public_keys(self, sign: str, data: bytes, v: int = None):
+        """
+        根据签名和被签数据的hash，还原签名者的公钥
+        Thanks to https://github.com/kypomon/public-key-recovery-of-sm2/blob/4a934d055e15f58925e862dee352c93c1684e16a/sm2.py#L198
+        :param sign: 签名结果
+        :param data: 被签数据(的hash)
+        :param v: V in (R, S, V)
+        :return: Set[签名者公钥]，长度为2(或4?)
+        """
+        r = int(sign[0:self.para_len], 16)
+        s = int(sign[self.para_len:2 * self.para_len], 16)
+        if len(sign) > 2 * self.para_len:
+            # 65-byte signature, with the last byte as v
+            v = int(sign[2 * self.para_len:2 * self.para_len + 2], 16)
+        n = int(self.ecc_table['n'], base=16)
+        p = int(self.ecc_table['p'], base=16)
+        
+        e = int(data.hex(), 16)
+        # x1 = (r - e) mod n if restrict x1 in [1, n-1]
+        x = (r - e) % n
+        # g = x1^3 + a*x1 + b (mod p)
+        factor1 = (x * x) % p
+        factor1 = (factor1 * x) % p
+        factor2 = (x * int(self.ecc_table['a'], base=16)) % p
+        g = (factor1 + factor2) % p
+        g = (g + int(self.ecc_table['b'], base=16)) % p
+        # U = (P - 3)/4 + 1;
+        u = (p - 3) // 4 + 1
+        # y1 = g^u (mod p)
+        y = func.exp_mod(g, u, p)
+        # y1^2 = g (mod p) 验证
+        if ((y * y) % p != g):
+            raise ValueError('y*y == g (mod p) 验证失败')
+        results = set()
+        # 关于v，一般来说v只会有27或者28两种情况，标志着奇偶性
+        # TODO: v in (29, 30)? For magnitude of x greater than the curve order
+        for v in (v, ) if v else (27, 28):
+            v -= 27
+            if (y & 1 != v):
+                y = p - y
+            # 计算 g = -(s + r)^-1 (mod n)
+            g = (s + r) % n
+            g = n - func.inv_mod(g, n)
+            # 计算Q= -Q = (x, -y)
+            y = p - y
+            form = '%%0%dx' % self.para_len
+            form = form * 3
+            Q = form % (x, y, 1)
+            # 计算s*G
+            P = self._kg(s, self.ecc_table['g'])
+            # -Q+s*G
+            P = self._add_point(Q, P)
+            # 雅各比坐标转仿射坐标
+            P = self._convert_jacb_to_nor(P)
+            # 计算点乘
+            P = self._kg(g, P)
+            results.add(P)
+        return results
