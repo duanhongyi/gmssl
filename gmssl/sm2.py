@@ -31,6 +31,15 @@ class CryptSM2(object):
         self.mode = mode
         self.asn1 = asn1
 
+    def _point_on_curve(self, point):
+        x = int(point[0:self.para_len], 16)
+        y = int(point[self.para_len:len(point)], 16)
+        left = (y * y) % int(self.ecc_table['p'], base=16)
+        right = (x * x * x) % int(self.ecc_table['p'], base=16)
+        right = (right + int(self.ecc_table['a'], base=16) * x) %  int(self.ecc_table['p'], base=16)
+        right = (right + int(self.ecc_table['b'], base=16)) % int(self.ecc_table['p'], base=16)
+        return (left == right)
+
     def _kg(self, k, Point):  # kP运算
         Point = '%s%s' % (Point, '1')
         mask_str = '8'
@@ -242,6 +251,8 @@ class CryptSM2(object):
         len_2 = 2 * self.para_len
         len_3 = len_2 + 64
         C1 = data[0:len_2]
+        if not self._point_on_curve(C1):
+            return None
 
         if self.mode:
             C3 = data[len_2:len_3]
