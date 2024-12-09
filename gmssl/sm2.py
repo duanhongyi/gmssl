@@ -3,6 +3,7 @@ from random import choice
 from . import sm3, func
 from Cryptodome.Util.asn1 import DerSequence, DerInteger
 from binascii import unhexlify
+
 # 选择素域，设置椭圆曲线参数
 
 default_ecc_table = {
@@ -14,10 +15,11 @@ default_ecc_table = {
     'b': '28E9FA9E9D9F5E344D5A9E4BCF6509A7F39789F515AB8F92DDBCBD414D940E93',
 }
 
+prefix = '04'
 
 class CryptSM2(object):
 
-    def __init__(self, private_key, public_key, ecc_table=default_ecc_table, mode=0, asn1=False):
+    def __init__(self, private_key, public_key, ecc_table=default_ecc_table, mode=1, asn1=False,ct_prefix=prefix):
         """
         mode: 0-C1C2C3, 1-C1C3C2 (default is 1)
         """
@@ -25,11 +27,12 @@ class CryptSM2(object):
         self.public_key = public_key[2:] if (public_key.startswith("04") and len(public_key)==130) else public_key
         self.para_len = len(ecc_table['n'])
         self.ecc_a3 = (
-            int(ecc_table['a'], base=16) + 3) % int(ecc_table['p'], base=16)
+                              int(ecc_table['a'], base=16) + 3) % int(ecc_table['p'], base=16)
         self.ecc_table = ecc_table
         assert mode in (0, 1), 'mode must be one of (0, 1)'
         self.mode = mode
         self.asn1 = asn1
+        self.ct_prefix = ct_prefix
 
     def _point_on_curve(self, point):
         x = int(point[0:self.para_len], 16)
@@ -171,7 +174,7 @@ class CryptSM2(object):
             s = origin_sign[1]
         else:
             r = int(Sign[0:self.para_len], 16)
-            s = int(Sign[self.para_len:2*self.para_len], 16)
+            s = int(Sign[self.para_len:2 * self.para_len], 16)
         e = int(data.hex(), 16)
         t = (r + s) % int(self.ecc_table['n'], base=16)
         if t == 0:
@@ -213,8 +216,8 @@ class CryptSM2(object):
         if R == 0 or R + k == int(self.ecc_table['n'], base=16):
             return None
         d_1 = pow(
-            d+1, int(self.ecc_table['n'], base=16) - 2, int(self.ecc_table['n'], base=16))
-        S = (d_1*(k + R) - R) % int(self.ecc_table['n'], base=16)
+            d + 1, int(self.ecc_table['n'], base=16) - 2, int(self.ecc_table['n'], base=16))
+        S = (d_1 * (k + R) - R) % int(self.ecc_table['n'], base=16)
         if S == 0:
             return None
         elif self.asn1:
@@ -229,9 +232,9 @@ class CryptSM2(object):
         C1 = self._kg(int(k, 16), self.ecc_table['g'])
         xy = self._kg(int(k, 16), self.public_key)
         x2 = xy[0:self.para_len]
-        y2 = xy[self.para_len:2*self.para_len]
+        y2 = xy[self.para_len:2 * self.para_len]
         ml = len(msg)
-        t = sm3.sm3_kdf(xy.encode('utf8'), ml/2)
+        t = sm3.sm3_kdf(xy.encode('utf8'), ml / 2)
         if int(t, 16) == 0:
             return None
         else:
@@ -241,13 +244,16 @@ class CryptSM2(object):
                 i for i in bytes.fromhex('%s%s%s' % (x2, msg, y2))
             ])
             if self.mode:
-                return bytes.fromhex('%s%s%s' % (C1, C3, C2))
+                return bytes.fromhex('%s%s%s%s' % (self.ct_prefix,C1, C3, C2))
             else:
-                return bytes.fromhex('%s%s%s' % (C1, C2, C3))
+                return bytes.fromhex('%s%s%s%s' % (self.ct_prefix,C1, C2, C3))
 
     def decrypt(self, data):
         # 解密函数，data密文（bytes）
         data = data.hex()
+        # 其他加密公工具产生的加密密文会自带04头, 增加04判断
+        if data[:len(self.ct_prefix)] == self.ct_prefix:
+            data = data[len(self.ct_prefix):]
         len_2 = 2 * self.para_len
         len_3 = len_2 + 64
         C1 = data[0:len_2]
@@ -266,7 +272,7 @@ class CryptSM2(object):
         x2 = xy[0:self.para_len]
         y2 = xy[self.para_len:len_2]
         cl = len(C2)
-        t = sm3.sm3_kdf(xy.encode('utf8'), cl/2)
+        t = sm3.sm3_kdf(xy.encode('utf8'), cl / 2)
         if int(t, 16) == 0:
             return None
         else:
@@ -283,7 +289,7 @@ class CryptSM2(object):
         其中: z = Hash256(Len(ID) + ID + a + b + xG + yG + xA + yA)
         """
         # sm3withsm2 的 z 值
-        z = '0080'+'31323334353637383132333435363738' + \
+        z = '0080' + '31323334353637383132333435363738' + \
             self.ecc_table['a'] + self.ecc_table['b'] + self.ecc_table['g'] + \
             self.public_key
         z = binascii.a2b_hex(z)
