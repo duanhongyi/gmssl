@@ -17,7 +17,7 @@ default_ecc_table = {
 
 class CryptSM2(object):
 
-    def __init__(self, private_key, public_key, ecc_table=default_ecc_table, mode=0, asn1=False):
+    def __init__(self, private_key, public_key, ecc_table=default_ecc_table, mode=0, asn1=False, bouncycastle = False):
         """
         mode: 0-C1C2C3, 1-C1C3C2 (default is 1)
         """
@@ -30,6 +30,7 @@ class CryptSM2(object):
         assert mode in (0, 1), 'mode must be one of (0, 1)'
         self.mode = mode
         self.asn1 = asn1
+        self.bouncycastle = bouncycastle  # 兼容java
 
     def _point_on_curve(self, point):
         x = int(point[0:self.para_len], 16)
@@ -246,6 +247,8 @@ class CryptSM2(object):
                 return bytes.fromhex('%s%s%s' % (C1, C2, C3))
 
     def decrypt(self, data):
+        if self.bouncycastle and data.startswith(b'\x04'):
+            data = data[1:]
         # 解密函数，data密文（bytes）
         data = data.hex()
         len_2 = 2 * self.para_len
